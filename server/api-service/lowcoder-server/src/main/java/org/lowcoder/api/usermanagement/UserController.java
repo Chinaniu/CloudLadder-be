@@ -10,24 +10,32 @@ import org.lowcoder.api.home.SessionUserService;
 import org.lowcoder.api.home.UserHomeApiService;
 import org.lowcoder.api.usermanagement.view.UpdateUserRequest;
 import org.lowcoder.api.usermanagement.view.UserProfileView;
+import org.lowcoder.domain.group.service.GroupMemberService;
+import org.lowcoder.domain.group.service.GroupService;
+import org.lowcoder.domain.organization.model.MemberRole;
+import org.lowcoder.domain.organization.model.OrgMember;
+import org.lowcoder.domain.organization.service.OrgMemberService;
 import org.lowcoder.domain.user.constant.UserStatusType;
+import org.lowcoder.domain.user.model.Connection;
 import org.lowcoder.domain.user.model.User;
 import org.lowcoder.domain.user.model.UserDetail;
+import org.lowcoder.domain.user.model.UserStatus;
 import org.lowcoder.domain.user.service.UserService;
 import org.lowcoder.domain.user.service.UserStatusService;
 import org.lowcoder.sdk.config.CommonConfig;
 import org.lowcoder.sdk.exception.BizError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.Part;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 public class UserController implements UserEndpoints
@@ -53,6 +61,15 @@ public class UserController implements UserEndpoints
 
     @Autowired
     private CommonConfig commonConfig;
+
+    @Autowired
+    private OrgMemberService orgMemberService;
+
+    @Autowired
+    private GroupMemberService groupMemberService;
+
+    @Autowired
+    private GroupService groupService;
 
     @Override
     public Mono<ResponseView<?>> getUserProfile(ServerWebExchange exchange) {
@@ -168,4 +185,58 @@ public class UserController implements UserEndpoints
         return userApiService.getUserDetailById(userId)
                 .map(ResponseView::success);
     }
+
+
+    @Override
+    public Mono<ResponseEntity<ResponseView<Map<String,Set<String>>>>> getFlowIseOperation(
+            @PathVariable("createdBy") String createdBy,
+            @PathVariable("orgId") String orgId
+    ) {
+        return orgMemberService.getCurrentOrgMember(createdBy)
+                .flatMap(allOrgAdmins -> {
+
+                    return  groupService.getAllUsersGroup(orgId)
+                            .flatMap(group -> {
+                                if (group.isAllUsersGroup()){
+                                    return groupMemberService.getGroupMember(group.getId(), createdBy)
+                                            .flatMap(groupMember -> {
+                                                if (groupMember != null && allOrgAdmins.isAdmin()) {
+                                                    return orgMemberService.getOrganizationMembers(orgId)
+                                                            .map(OrgMember::getUserId)
+                                                            .collect(Collectors.toSet())
+                                                            .flatMap(adminIds ->{
+                                                                return Flux.fromIterable(adminIds)
+                                                                        .flatMap(adminId -> userService.findById(adminId))
+                                                                        .filter(Objects::nonNull) // Filter out non-existing users
+                                                                        .collect(Collectors.toSet())
+                                                                        .flatMap(existingUsers -> {
+                                                                            Set<String> existingAdminIds = existingUsers.stream()
+                                                                                    .map(User::getId)
+                                                                                    .collect(Collectors.toSet());
+
+                                                                            Map<String,Set<String>> map = new HashMap<>();
+                                                                            map.put(orgId,existingAdminIds);
+
+                                                                            return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "IDs fetched successfully", map)));
+                                                                        });
+                                                            });
+                                                } else if(allOrgAdmins.getRole() == MemberRole.MEMBER){
+                                                    return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "No matching group found", Collections.emptyMap())));
+                                                }
+                                                Map<String, Set<String>> result = new HashMap<>();
+                                                result.put(orgId, Collections.singleton(createdBy));
+                                                return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "Dev Group", result)));
+                                            });
+                                }else if(group.isDevGroup()){
+                                    Map<String, Set<String>> result = new HashMap<>();
+                                    result.put(orgId, Collections.singleton(createdBy));
+                                    return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "Dev Group", result)));
+                                }
+                                return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "No matching group found", Collections.emptyMap())));
+                            });
+                });
+
+    }
+
+
 }

@@ -28,12 +28,16 @@ import org.lowcoder.domain.organization.service.OrgMemberService;
 import org.lowcoder.domain.organization.service.OrganizationService;
 import org.lowcoder.domain.user.model.*;
 import org.lowcoder.domain.user.service.UserService;
+import org.lowcoder.redis.service.RegisterService;
 import org.lowcoder.sdk.auth.AbstractAuthConfig;
 import org.lowcoder.sdk.config.AuthProperties;
 import org.lowcoder.sdk.exception.BizError;
 import org.lowcoder.sdk.exception.BizException;
 import org.lowcoder.sdk.util.CookieHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
@@ -41,12 +45,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.lowcoder.sdk.exception.BizError.*;
+import static org.lowcoder.sdk.exception.BizError.VERIFICATION_FAILED;
 import static org.lowcoder.sdk.util.ExceptionUtils.deferredError;
 import static org.lowcoder.sdk.util.ExceptionUtils.ofError;
 
@@ -88,6 +95,15 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Autowired
     private AuthProperties authProperties;
+
+    @Autowired
+    private RegisterService registerService;
+
+//    @Value("${cookie.domain}")
+//    private String cookieDomain;
+
+    @Autowired
+    private Environment env;
 
     @Override
     public Mono<AuthUser> authenticateByForm(String loginId, String password, String source, boolean register, String authId, String orgId) {
@@ -139,22 +155,62 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 .delayUntil(user -> ReactiveSecurityContextHolder.getContext()
                         .doOnNext(securityContext -> securityContext.setAuthentication(AuthenticationUtils.toAuthentication(user))))
                 // save token and set cookie
-                .delayUntil(user -> {
-                    String token = CookieHelper.generateCookieToken();
+                .delayUntil(user ->
+                        {
+                       String token = CookieHelper.generateCookieToken() + ":createdBy:" + user.getId() + ":orgId:" + authUser.getOrgId();
                     return sessionUserService.saveUserSession(token, user, authUser.getSource())
                             .then(Mono.fromRunnable(() -> cookieHelper.saveCookie(token, exchange)));
                 })
-                // after register
+
+
+            // after register
                 .delayUntil(user -> {
                     boolean createWorkspace =
                             authUser.getOrgId() == null && StringUtils.isBlank(invitationId) && authProperties.getWorkspaceCreation();
-                    if (user.getIsNewUser() && createWorkspace) {
-                        return onUserRegister(user);
+                    if (user.getIsNewUser()&& createWorkspace) {
+                        // userInputName
+                        String userInputName = user.getName();
+                        // use userInputName take redis a codeValue
+                        String codeFromRedis = registerService.getCodeFromRedis(userInputName);
+                        if (codeFromRedis != null) {
+                            // verify Success
+                            return onUserRegister(user);
+                        } else {
+                            // verify fails
+                            return Mono.error(new BizException(VERIFICATION_FAILED, "VERIFICATION_FAILED"));
+                        }
+                    } else {
+                        return Mono.empty();
                     }
-                    return Mono.empty();
                 })
+
                 // after login
                 .delayUntil(user -> onUserLogin(authUser.getOrgId(), user, authUser.getSource()))
+                .flatMap(user -> {
+
+                    Instant now = Instant.now();
+                    Instant expires = now.plus(Duration.ofDays(7));
+                    long maxAgeSeconds = Duration.between(now, expires).getSeconds();
+                    String cloudLadder = user.getName();
+                    String cookieDomain = env.getProperty("cookie.domain");
+
+                    ResponseCookie n8nCookie = ResponseCookie
+                            .from("cloudLadder", cloudLadder)
+//                            .domain(cookieDomain)
+                            .path("/")
+                            .httpOnly(true)
+                            .secure(true)//true
+                            .maxAge(maxAgeSeconds)
+                            .sameSite("LAX")
+                            .build();
+
+
+
+                    ServerHttpResponse response = exchange.getResponse();
+                    response.addCookie(n8nCookie);
+
+                    return Mono.just(user);
+                })
                 // process invite
                 .delayUntil(__ -> {
                     if (StringUtils.isBlank(invitationId)) {
@@ -207,7 +263,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
 
                     if (authUser.getAuthContext().getAuthConfig().isEnableRegister()) {
-                        return userService.createNewUserByAuthUser(authUser);
+                        String name = authUser.getUsername();
+                        String codeFromRedis = registerService.getCodeFromRedis(name);
+                        if (codeFromRedis != null) {
+                            return userService.createNewUserByAuthUser(authUser);
+                        }else {
+                            // verify fails
+                            return Mono.error(new BizException(VERIFICATION_FAILED, "VERIFICATION_FAILED"));
+                        }
                     }
                     return Mono.error(new BizException(USER_NOT_EXIST, "USER_NOT_EXIST"));
                 });

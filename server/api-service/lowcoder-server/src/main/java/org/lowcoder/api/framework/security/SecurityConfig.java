@@ -135,7 +135,16 @@ public class SecurityConfig {
                         ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.MATERIAL_URL + "/**"),
                         ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.ORGANIZATION_URL + "/*/datasourceTypes"), // datasource types
                         ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.DATASOURCE_URL + "/jsDatasourcePlugins"),
-                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/api/docs/**")
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/api/docs/**"),
+
+
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, NewUrl.USER_URL + "/sendRegisterMail"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, NewUrl.USER_URL + "/sendResetPasswordEmail"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.USER_URL + "/captcha"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.USER_URL + "/captcha/**"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, NewUrl.USER_URL + "/verifyRegisterCode"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, NewUrl.USER_URL + "/resetPassword"),
+                        ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, NewUrl.USER_URL + "/flowIse/**")
                 )
                 	.permitAll()
                 .pathMatchers("/api/**")

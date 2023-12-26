@@ -143,6 +143,12 @@ public enum BizError {
 
     // material 6351 - 6400
     INVALID_MATERIAL_REQUEST(500, 6351),
+
+    //verify code ,reset password  6451 - 6500
+    VERIFICATION_FAILED(500, 6451),
+    PASSWORD_RESET_FAILURE(500, 6452),
+    SEND_EMAIL_FAILED(500,6453),
+    INVALID_COOKIE_FORMAT(500, 6454);
     ;
 
     static {

@@ -2,6 +2,7 @@ package org.lowcoder.domain.user.service;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.lowcoder.domain.user.model.AuthUser;
 import org.lowcoder.domain.user.model.Connection;
@@ -10,6 +11,7 @@ import org.lowcoder.domain.user.model.UserDetail;
 import org.lowcoder.infra.annotation.NonEmptyMono;
 import org.lowcoder.infra.mongo.MongoUpsertHelper.PartialResourceWithId;
 import org.springframework.http.codec.multipart.Part;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Flux;
@@ -62,5 +64,8 @@ public interface UserService {
 
     Flux<User> findBySourceAndIds(String connectionSource, Collection<String> connectionSourceUuids);
 
+    Mono<User> findByName(String name);
+
+    Mono<ServerResponse> resetPasswordByName(String name, String newPassword);
 }
 

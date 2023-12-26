@@ -7,6 +7,7 @@ import org.lowcoder.domain.user.model.UserDetail;
 import org.lowcoder.infra.constant.NewUrl;
 import org.lowcoder.infra.constant.Url;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,9 @@ import org.springframework.web.server.ServerWebExchange;
 
 import io.swagger.v3.oas.annotations.Operation;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = {Url.USER_URL, NewUrl.USER_URL})
@@ -147,6 +151,18 @@ public interface UserEndpoints
 	)
     @GetMapping("/userDetail/{id}")
     public Mono<ResponseView<?>> getUserDetail(@PathVariable("id") String userId);
+
+	@Operation(
+			tags = TAG_USER_MANAGEMENT,
+			operationId = "getFlowIseOperation",
+			summary = "Get User Details by information give flowIse",
+			description = "Retrieve specific User Details within Lowcoder using their unique user ID."
+	)
+	@GetMapping("/flowIse/{createdBy}/{orgId}")
+	public Mono<ResponseEntity<ResponseView<Map<String,Set<String>>>>> getFlowIseOperation(
+			@PathVariable("createdBy") String createdBy,
+			@PathVariable("orgId") String orgId
+	);
 
     public record ResetPasswordRequest(String userId) {
     }

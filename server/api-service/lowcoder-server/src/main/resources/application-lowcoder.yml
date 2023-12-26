@@ -1,14 +1,62 @@
+auth:
+  api-key:
+    secret: 5a41b090758b39b226603177ef48d73ae9839dd458ccb7e66f7e7cc028d5a50b
+  email:
+    enable: true
+    enable-register: ${ENABLE_USER_SIGN_UP:true}
+  workspace-creation: false
 spring:
   data:
     mongodb:
       authentication-database: admin
       auto-index-creation: false
-      uri: mongodb://192.168.8.103:27017/lowcoder?authSource=admin
+      host: t1.wencst.com
+      port: 30018
+      database: cruiser
+      username: cruiser
+      password: Cru1s3r#2022
     redis:
-      url: redis://192.168.8.103:6379
+      #url: redis://Cruiser#2022@t1.wencst.com:30019
+      url: redis://t1.wencst.com:30020
+      host: t1.wencst.com
+      port: 30019
+      password: "Cruiser#2022"
   main:
     allow-bean-definition-overriding: true
     allow-circular-references: true
+  codec:
+    max-in-memory-size: 20MB
+
+   #freemarker configuration
+  freemarker:
+    template-loader-path: classpath:/templates/
+    suffix: .ftl
+    cache: false
+    charset: utf-8
+    check-template-location: true
+    content-type: text/html
+
+  #email configuration
+  mail:
+    host: smtp.qiye.aliyun.com
+    username: dev@cloudladder.org.cn
+    password: Shangyunshuzhi1015
+    from: dev@cloudladder.org.cn
+    default-encoding: UTF-8
+    port: 465
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    protocol: smtps
+
+    # rootDomain configuration
+
+cookie:
+  domain: c.com
 
 server:
   compression:
@@ -25,17 +73,14 @@ default:
   org-group-count: 100
   org-app-count: 1000
   developer-count: 50
-  api-rate-limit: 50 
+  api-rate-limit: 50
 
 common:
-  cookie-name: LOCAL_LOWCODER_TOKEN
+  cookie-name: LOWCODER_CE_SELFHOST_TOKEN
   product: lowcoder
   domain:
-    default-value: skipCheck
-  encrypt:
-    password: lowcoder
-    salt: lowcoder
-  cloud: true
+    default-value: lowcoder.org
+  cloud: false 
   security:
     cors-allowed-domains:
       - '*'
@@ -43,8 +88,17 @@ common:
   apiVersion: 1.1
   block-hound-enable: false
   js-executor:
-    host: http://127.0.0.1:6060
-
+    host: ${LOWCODER_NODE_SERVICE_URL:http://127.0.0.1:6060}
+  max-query-request-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
+  max-query-response-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
+  max-upload-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
+  encrypt:
+    password: ${ENCRYPTION_PASSWORD:lowcoder.org}
+    salt: ${ENCRYPTION_SALT:lowcoder.org}
+#  security:
+#    corsAllowedDomainString: ${CORS_ALLOWED_DOMAINS:*}
+  workspace:
+    mode: ENTERPRISE
 material:
   mongodb-grid-fs:
     bucket-name: material
@@ -55,11 +109,23 @@ springdoc:
   swagger-ui:
     path: /api/docs/swagger-ui
   paths-to-exclude: /api/v1/**
+    #common:
+    #encrypt:
+    #password: ${ENCRYPTION_PASSWORD:lowcoder.org}
+    #salt: ${ENCRYPTION_SALT:lowcoder.org}
+    #security:
+    #corsAllowedDomainString: ${CORS_ALLOWED_DOMAINS:*}
+    #workspace:
+    #mode: ENTERPRISE
 
-auth:
-  api-key:
-    secret: 5a41b090758b39b226603177ef48d73ae9839dd458ccb7e66f7e7cc028d5a50b
-  email:
-    enable: true
-    enable-register: true
-  workspace-creation: false
+    #auth:
+    #email:
+    #enable: ${LOGIN_CHANNEL_EMAIL:true}
+    #enable-register: ${ENABLE_USER_SIGN_UP:true}
+
+    #spring:
+    #data:
+    #mongodb:
+    #uri: ${MONGODB_URL:mongodb://localhost:27017/lowcoder?socketTimeoutMS=5000}
+    #redis:
+  #url: ${REDIS_URL:redis://localhost:6379}

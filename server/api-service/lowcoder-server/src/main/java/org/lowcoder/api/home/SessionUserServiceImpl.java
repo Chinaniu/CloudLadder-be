@@ -18,12 +18,15 @@ import org.lowcoder.domain.user.model.UserState;
 import org.lowcoder.domain.user.service.UserService;
 import org.lowcoder.sdk.config.CommonConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -41,6 +44,9 @@ public class SessionUserServiceImpl implements SessionUserService {
 
     @Autowired
     private ReactiveRedisTemplate<String, String> reactiveTemplate;
+
+    @Autowired
+    private Environment env;
 
     @SuppressWarnings("ReactiveStreamsNullableInLambdaInTransform")
     @Override
@@ -154,6 +160,25 @@ public class SessionUserServiceImpl implements SessionUserService {
     @Override
     public Mono<Boolean> tokenExist(String token) {
         return reactiveTemplate.hasKey(token);
+    }
+
+    @Override
+    public Mono<Void> removeCookie(ServerWebExchange exchange, String cookieName) {
+        String cookieDomain = env.getProperty("cookie.domain");
+
+        ResponseCookie expiredCookie = ResponseCookie
+                .from(cookieName,"")
+//                .domain(cookieDomain)
+                .path("/")  //cookie
+                .httpOnly(true)
+                .secure(true)
+                .maxAge(0)
+                .sameSite("LAX")
+                .build();
+
+        exchange.getResponse().addCookie(expiredCookie);
+
+        return Mono.empty();
     }
 }
 

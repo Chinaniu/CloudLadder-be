@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Getter;
 
+import java.util.Map;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 public class ResponseView<T> {
@@ -23,6 +25,18 @@ public class ResponseView<T> {
 
     public static <T> ResponseView<T> success(int code, T data) {
         return new ResponseView<>(code, "", data);
+    }
+
+    public static <T> ResponseView<T> lxSuccess(int code,String message, T data) {
+        return new ResponseView<>(code, message, data);
+    }
+
+    public static <T> ResponseView<T> success(T data,String message) {
+        return lxSuccess(SUCCESS,message,data);
+    }
+
+    public static <T> ResponseView<Map<String, T>> flowIseSuccess(int code, String message, Map<String, T> data) {
+        return new ResponseView<>(code, message, data);
     }
 
     public static <T> ResponseView<T> success(T data) {

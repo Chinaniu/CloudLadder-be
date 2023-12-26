@@ -5,6 +5,7 @@ import org.lowcoder.domain.organization.model.OrgMember;
 import org.lowcoder.domain.user.model.User;
 import org.lowcoder.infra.annotation.NonEmptyMono;
 
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 public interface SessionUserService {
@@ -33,4 +34,7 @@ public interface SessionUserService {
     Mono<User> resolveSessionUserForJWT(Claims claims, String token);
 
     Mono<Boolean> tokenExist(String token);
+
+    //remove  cookie
+    Mono<Void> removeCookie(ServerWebExchange exchange, String cookieName);
 }

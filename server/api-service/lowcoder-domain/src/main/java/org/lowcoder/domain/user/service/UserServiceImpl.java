@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,10 +44,12 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.lowcoder.domain.user.model.UserDetail.ANONYMOUS_CURRENT_USER;
 import static org.lowcoder.sdk.constants.GlobalContext.CLIENT_IP;
+import static org.lowcoder.sdk.exception.BizError.USER_NOT_EXIST;
 import static org.lowcoder.sdk.util.ExceptionUtils.ofError;
 import static org.lowcoder.sdk.util.ExceptionUtils.ofException;
 
@@ -114,6 +117,8 @@ public class UserServiceImpl implements UserService {
     public Mono<User> findByName(String rawUuid) {
         return repository.findByName(rawUuid);
     }
+
+
 
     @Override
     public Mono<Boolean> saveProfilePhoto(Part filePart, User user) {
@@ -373,6 +378,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public Flux<User> findBySourceAndIds(String connectionSource, Collection<String> connectionSourceUuids) {
         return repository.findByConnections_SourceAndConnections_RawIdIn(connectionSource, connectionSourceUuids);
+    }
+
+    @Override
+    public Mono<ServerResponse> resetPasswordByName(String name, String newPassword) {
+        // password review
+        return  repository.findByName(name)
+                .flatMap(user -> {
+                    if (!Objects.equals(newPassword, user.getPassword())){
+                        user.setPassword(encryptionService.encryptPassword(newPassword));
+                        Map<String, String> responseBody = new HashMap<>();
+                        responseBody.put("message", "Password reset successfully");
+                        return repository.save(user)
+                                .then(ServerResponse.ok().bodyValue(responseBody));
+                    }else{
+                        return  Mono.error(new BizException(USER_NOT_EXIST, "USER_NOT_EXIST"));
+                    }
+                })
+                .switchIfEmpty(Mono.error(new BizException(USER_NOT_EXIST, "USER_NOT_EXIST")));
     }
 
 }
