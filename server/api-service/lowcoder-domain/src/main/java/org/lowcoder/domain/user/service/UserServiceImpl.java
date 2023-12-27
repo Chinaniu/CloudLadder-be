@@ -385,7 +385,7 @@ public class UserServiceImpl implements UserService {
         // password review
         return  repository.findByName(name)
                 .flatMap(user -> {
-                    if (!Objects.equals(newPassword, user.getPassword())){
+                    if (!Objects.equals(encryptionService.encryptPassword(newPassword), user.getPassword())){
                         user.setPassword(encryptionService.encryptPassword(newPassword));
                         Map<String, String> responseBody = new HashMap<>();
                         responseBody.put("message", "Password reset successfully");

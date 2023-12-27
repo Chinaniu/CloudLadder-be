@@ -53,6 +53,9 @@ spring:
             required: true
     protocol: smtps
 
+urls:
+  reset_password: "http://localhost:8000/user/auth/resetPassword?token="
+
     # rootDomain configuration
 
 cookie:

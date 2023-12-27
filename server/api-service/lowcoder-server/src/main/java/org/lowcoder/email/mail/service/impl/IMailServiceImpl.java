@@ -43,6 +43,8 @@ public class IMailServiceImpl implements IMailService {
     @Value("${spring.mail.from}")
     private String from;
 
+    @Value("${urls.reset_password}")
+    private String redirectLink;
     /**
      *  register
      * @param to  email
@@ -137,12 +139,12 @@ public class IMailServiceImpl implements IMailService {
 
             // random code link
 //            String redirectUrl = "http://localhost:8000/user/auth/resetPassword?resetCode=" + randomCode ;
-            String redirectUrl = "http://localhost:8000/user/auth/resetPassword?token=" + randomCode ;
+            String redirectUrl = redirectLink + randomCode ;
 
 
 
             // email content link
-            String link = "<a href=\"" + redirectUrl + "\">ResetPassword Link</a>";
+            String link = "<a href=\"" + redirectUrl + "\">重置密码链接</a>";
 
             // create email
             String mailContent = content
