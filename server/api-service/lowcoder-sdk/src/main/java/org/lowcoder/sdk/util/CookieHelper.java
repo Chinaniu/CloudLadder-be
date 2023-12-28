@@ -33,7 +33,7 @@ public class CookieHelper {
                 .orElse(false);
         ResponseCookieBuilder builder = ResponseCookie.from(getCookieName(), token)
                 .path(exchange.getRequest().getPath().contextPath().value() + "/")
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(isUsingHttps)
                 .sameSite(isUsingHttps ? "None" : "Lax");
         // set cookie max-age

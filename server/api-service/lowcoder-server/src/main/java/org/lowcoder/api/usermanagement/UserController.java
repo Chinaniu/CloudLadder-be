@@ -221,7 +221,9 @@ public class UserController implements UserEndpoints
                                                                         });
                                                             });
                                                 } else if(allOrgAdmins.getRole() == MemberRole.MEMBER){
-                                                    return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "No matching group found", Collections.emptyMap())));
+                                                    Map<String, Set<String>> result = new HashMap<>();
+                                                    result.put(orgId, Collections.singleton(createdBy));
+                                                    return Mono.just(ResponseEntity.ok().body(ResponseView.flowIseSuccess(ResponseView.SUCCESS, "Member member", result)));
                                                 }
                                                 Map<String, Set<String>> result = new HashMap<>();
                                                 result.put(orgId, Collections.singleton(createdBy));
