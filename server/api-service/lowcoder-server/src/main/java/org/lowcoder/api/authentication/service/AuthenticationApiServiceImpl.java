@@ -196,7 +196,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
                     ResponseCookie n8nCookie = ResponseCookie
                             .from("cloudLadder", cloudLadder)
-//                            .domain(cookieDomain)
+                            .domain(cookieDomain)
                             .path("/")
                             .httpOnly(true)
                             .secure(true)//true

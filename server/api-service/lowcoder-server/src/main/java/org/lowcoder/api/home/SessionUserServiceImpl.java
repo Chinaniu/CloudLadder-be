@@ -168,7 +168,7 @@ public class SessionUserServiceImpl implements SessionUserService {
 
         ResponseCookie expiredCookie = ResponseCookie
                 .from(cookieName,"")
-//                .domain(cookieDomain)
+                .domain(cookieDomain)
                 .path("/")  //cookie
                 .httpOnly(true)
                 .secure(true)
