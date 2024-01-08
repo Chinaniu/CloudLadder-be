@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import org.lowcoder.sdk.config.CommonConfig;
 import org.lowcoder.sdk.config.CommonConfig.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseCookie.ResponseCookieBuilder;
@@ -27,13 +28,20 @@ public class CookieHelper {
     @Autowired
     private CommonConfig commonConfig;
 
+    @Autowired
+    private Environment env;
+
+    String cookieDomain = env.getProperty("cookie.domain");
+
+
     public void saveCookie(String token, ServerWebExchange exchange) {
         boolean isUsingHttps = Optional.ofNullable(getRefererURI(exchange.getRequest()))
                 .map(a -> "https".equalsIgnoreCase(a.getScheme()))
                 .orElse(false);
         ResponseCookieBuilder builder = ResponseCookie.from(getCookieName(), token)
                 .path(exchange.getRequest().getPath().contextPath().value() + "/")
-                .httpOnly(false)
+                .httpOnly(false)//true
+                .domain(cookieDomain)
                 .secure(isUsingHttps)
                 .sameSite(isUsingHttps ? "None" : "Lax");
         // set cookie max-age

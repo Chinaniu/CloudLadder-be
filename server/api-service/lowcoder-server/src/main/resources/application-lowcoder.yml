@@ -59,7 +59,7 @@ urls:
     # rootDomain configuration
 
 cookie:
-  domain: cloudladder.net.cn
+  domain: .cloudladder.net.cn
 
 server:
   compression:
