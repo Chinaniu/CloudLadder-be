@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import org.lowcoder.sdk.config.CommonConfig;
 import org.lowcoder.sdk.config.CommonConfig.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseCookie.ResponseCookieBuilder;
@@ -28,11 +28,9 @@ public class CookieHelper {
     @Autowired
     private CommonConfig commonConfig;
 
-    @Autowired
-    private Environment env;
 
-    String cookieDomain = env.getProperty("cookie.domain");
-
+        @Value("${cookie.domain}")
+        private String cookieDomain;
 
     public void saveCookie(String token, ServerWebExchange exchange) {
         boolean isUsingHttps = Optional.ofNullable(getRefererURI(exchange.getRequest()))
