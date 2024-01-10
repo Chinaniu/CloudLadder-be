@@ -5,6 +5,7 @@ import static org.lowcoder.domain.permission.model.ResourceAction.READ_APPLICATI
 import static org.lowcoder.infra.util.MonoUtils.emptyIfNull;
 import static org.lowcoder.sdk.util.StreamUtils.collectList;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,10 @@ import org.lowcoder.domain.user.service.UserService;
 import org.lowcoder.domain.user.service.UserStatusService;
 import org.lowcoder.infra.util.NetworkUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -79,6 +84,8 @@ public class UserHomeApiServiceImpl implements UserHomeApiService {
     @Autowired
     private UserApplicationInteractionService userApplicationInteractionService;
 
+    @Autowired
+    private Environment env;
     @Override
     public Mono<UserProfileView> buildUserProfileView(User user, ServerWebExchange exchange) {
 
@@ -90,7 +97,8 @@ public class UserHomeApiServiceImpl implements UserHomeApiService {
                     .build()
             );
         }
-
+        ServerHttpRequest serverHttpRequest = exchange.getRequest();
+        ServerHttpResponse response = exchange.getResponse();
         Mono<UserStatus> userStatusMono = userStatusService.findByUserId(user.getId());
 
         return Mono.zip(userStatusMono, orgMemberService.getUserOrgMemberInfo(user.getId()))
@@ -119,6 +127,23 @@ public class UserHomeApiServiceImpl implements UserHomeApiService {
                             .map(tuple2 -> {
                                 List<OrgAndVisitorRoleView> orgAndRoles = tuple2.getT1();
                                 boolean isOrgDev = tuple2.getT2();
+
+                                String Flowise = "FLOWISE_LOGIN"+":createdBy:" + user.getId() + ":orgId:" + currentOrgId;
+
+                                Instant now = Instant.now();
+                                Instant expires = now.plus(Duration.ofDays(7));
+                                long maxAgeSeconds = Duration.between(now, expires).getSeconds();
+                                String cookieDomain = env.getProperty("cookie.domain");
+                                ResponseCookie FlowiseCookie = ResponseCookie
+                                        .from("Flowise", Flowise)
+                                        .domain(cookieDomain)
+                                        .path("/")
+                                        .secure(true)//true
+                                        .maxAge(maxAgeSeconds)
+                                        .sameSite("Lax")
+                                        .build();
+
+                                response.addCookie(FlowiseCookie);
                                 return UserProfileView.builder()
                                         .id(user.getId())
                                         .username(user.getName())
