@@ -157,7 +157,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 // save token and set cookie
                 .delayUntil(user ->
                         {
-                       String token = CookieHelper.generateCookieToken() + ":createdBy:" + user.getId() + ":orgId:" + authUser.getOrgId();
+                       String token = CookieHelper.generateCookieToken();
                     return sessionUserService.saveUserSession(token, user, authUser.getSource())
                             .then(Mono.fromRunnable(() -> cookieHelper.saveCookie(token, exchange)));
                 })
@@ -194,6 +194,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     String cloudLadder = user.getName();
                     String cookieDomain = env.getProperty("cookie.domain");
 
+
+                    String Flowise = "FLOWISE_LOGIN"+":createdBy:" + user.getId() + ":orgId:" + authUser.getOrgId();
                     ResponseCookie n8nCookie = ResponseCookie
                             .from("cloudLadder", cloudLadder)
                             .domain(cookieDomain)
@@ -201,14 +203,24 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                             .httpOnly(true)
                             .secure(true)//true
                             .maxAge(maxAgeSeconds)
-                            .sameSite("LAX")
+                            .sameSite("Lax")
                             .build();
 
 
 
+                    ResponseCookie FlowiseCookie = ResponseCookie
+                            .from("Flowise", Flowise)
+                            .domain(cookieDomain)
+                            .path("/")
+                            .secure(true)//true
+                            .maxAge(maxAgeSeconds)
+                            .sameSite("Lax")
+                            .build();
+
+
                     ServerHttpResponse response = exchange.getResponse();
                     response.addCookie(n8nCookie);
-
+                    response.addCookie(FlowiseCookie);
                     return Mono.just(user);
                 })
                 // process invite

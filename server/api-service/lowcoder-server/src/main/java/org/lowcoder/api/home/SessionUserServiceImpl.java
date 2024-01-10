@@ -173,7 +173,7 @@ public class SessionUserServiceImpl implements SessionUserService {
                 .httpOnly(true)
                 .secure(true)
                 .maxAge(0)
-                .sameSite("LAX")
+                .sameSite("Lax")
                 .build();
 
         exchange.getResponse().addCookie(expiredCookie);

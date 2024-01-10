@@ -29,8 +29,6 @@ public class CookieHelper {
     private CommonConfig commonConfig;
 
 
-        @Value("${cookie.domain}")
-        private String cookieDomain;
 
     public void saveCookie(String token, ServerWebExchange exchange) {
         boolean isUsingHttps = Optional.ofNullable(getRefererURI(exchange.getRequest()))
@@ -38,8 +36,7 @@ public class CookieHelper {
                 .orElse(false);
         ResponseCookieBuilder builder = ResponseCookie.from(getCookieName(), token)
                 .path(exchange.getRequest().getPath().contextPath().value() + "/")
-                .httpOnly(false)//true
-                .domain(cookieDomain)
+                .httpOnly(true)
                 .secure(isUsingHttps)
                 .sameSite(isUsingHttps ? "None" : "Lax");
         // set cookie max-age

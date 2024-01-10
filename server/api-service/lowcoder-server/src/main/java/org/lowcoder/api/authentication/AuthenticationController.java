@@ -86,6 +86,7 @@ public class AuthenticationController implements AuthenticationEndpoints
         // clear cookie
         sessionUserService.removeCookie(exchange, "cloudLadder");
         sessionUserService.removeCookie(exchange, "n8n-auth");
+        sessionUserService.removeCookie(exchange,"Flowise");
         sessionUserService.removeCookie(exchange,"LOWCODER_CE_SELFHOST_TOKEN");
         return sessionUserService.removeUserSession(cookieToken)
                 .then(businessEventPublisher.publishUserLogoutEvent())
