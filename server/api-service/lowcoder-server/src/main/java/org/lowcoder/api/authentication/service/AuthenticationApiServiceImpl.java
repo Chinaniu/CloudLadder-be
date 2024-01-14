@@ -45,6 +45,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -191,9 +193,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     Instant now = Instant.now();
                     Instant expires = now.plus(Duration.ofDays(7));
                     long maxAgeSeconds = Duration.between(now, expires).getSeconds();
-                    String cloudLadder = user.getName();
+                    String cloudLadder = getMD5Hash(user.getName());
                     String cookieDomain = env.getProperty("cookie.domain");
-
 
                     String Flowise = "FLOWISE_LOGIN"+":createdBy:" + user.getId() + ":orgId:" + authUser.getOrgId();
                     ResponseCookie n8nCookie = ResponseCookie
@@ -532,5 +533,21 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     protected record VisitorBindAuthConnectionResult(@Nullable String orgId, String visitorId) {
+    }
+
+    //MD5加密
+    public static String getMD5Hash(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hash = md.digest(input.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
