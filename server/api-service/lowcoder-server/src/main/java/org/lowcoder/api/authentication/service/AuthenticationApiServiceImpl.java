@@ -213,7 +213,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                             .from("Flowise", Flowise)
                             .domain(cookieDomain)
                             .path("/")
-                            .secure(true)//true
+                            .secure(true)
                             .maxAge(maxAgeSeconds)
                             .sameSite("Lax")
                             .build();
