@@ -91,7 +91,7 @@ common:
   apiVersion: 1.1
   block-hound-enable: false
   js-executor:
-    host: ${LOWCODER_NODE_SERVICE_URL:http://127.0.0.1:6060}
+    host: ${LOWCODER_NODE_SERVICE_URL:http://172.28.10.207:8079}
   max-query-request-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
   max-query-response-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
   max-upload-size: ${LOWCODER_MAX_REQUEST_SIZE:20m}
