@@ -15,7 +15,8 @@ ARG PLUGIN_JARS=/lowcoder-server/lowcoder-plugins/*/target/*.jar
 
 # Copy lowcoder server application and plugins
 RUN cp ${JAR_FILE} /lowcoder/api-service/server.jar \
-  && cp ${PLUGIN_JARS} /lowcoder/api-service/plugins/
+  && cp ${PLUGIN_JARS} /lowcoder/api-service/plugins \
+  && rm -f /lowcoder/api-service/plugins/original-*/
 
 # Copy lowcoder server configuration
 COPY server/api-service/lowcoder-server/src/main/resources/selfhost/ce/application.yml /lowcoder/api-service/config/
