@@ -34,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v4.1.1
         with:
           context: .
-          file: ./docker/images/n8n-custom/Dockerfile
+          file: ./deploy/docker/Dockerfile
           build-args: |
             N8N_RELEASE_TYPE=beta
           platforms: linux/amd64,linux/arm64
